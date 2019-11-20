@@ -22,7 +22,7 @@ class Network_Manager_Theme {
 
 	public function __construct() {
 
-		require_once __DIR__ . '/class-plugins-api.php';
+		require_once __DIR__ . '/class-update-api.php';
 
 	} // End __construct
 
@@ -46,8 +46,7 @@ class Network_Manager_Theme {
 	*/
 	public function init() {
 
-		$plugins_api = new Plugins_API();
-		$plugins_api->init();
+		$update_api = new Update_API();
 
 	}
 }
