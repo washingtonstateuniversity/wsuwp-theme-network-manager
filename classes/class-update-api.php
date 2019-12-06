@@ -11,7 +11,7 @@
  *
  *
 */
-class Plugins_API {
+class Update_API {
 
 
 	/**
@@ -19,7 +19,7 @@ class Plugins_API {
 	 *
 	 * @since 0.0.1
 	*/
-	public function init() {
+	public function __construct() {
 
 		add_action( 'rest_api_init', array( $this, 'register_endpoint' ) );
 
@@ -34,7 +34,7 @@ class Plugins_API {
 
 		register_rest_route(
 			'wsuwp-network-manager/v1',
-			'/plugins',
+			'/updates',
 			array(
 				'methods' => 'GET',
 				'callback' => array( $this, 'the_response' ),
@@ -52,9 +52,13 @@ class Plugins_API {
 	*/
 	public function the_response( $request ) {
 
-		$installed_plugins = $this->get_installed_plugins_array();
+		$updates = array(
+			'platform' => $this->get_platform(),
+			'plugins'  => $this->get_plugins(),
+			'themes'   => $this->get_themes(),
+		);
 
-		$json = wp_json_encode( $installed_plugins );
+		$json = wp_json_encode( $updates );
 
 		echo $json;
 
@@ -72,7 +76,7 @@ class Plugins_API {
 	 *
 	 * @return array Array of installed plugins.
 	*/
-	protected function get_installed_plugins_array() {
+	protected function get_plugins() {
 
 		/**  Check if get_plugins() function exists. This is required on the front end of the
 		 * site, since it is in a file that is normally only loaded in the admin. */
@@ -110,6 +114,7 @@ class Plugins_API {
 					'key'      => $plugin_key,
 					'version'  => $plugin['Version'],
 					'title'    => $plugin['Name'],
+					'desc'     => $plugin['Description'],
 				);
 
 				// Add to plugins array
@@ -122,5 +127,45 @@ class Plugins_API {
 		} // End if
 
 	} // End get_installed_plugins_array
+
+
+	protected function get_themes() {
+
+		$installed_themes = wp_get_themes();
+
+		$themes = array();
+
+		foreach ( $installed_themes as $theme_key => $installed_theme ) {
+
+			if ( ! empty( $installed_theme && is_object( $installed_theme ) ) ) {
+
+				// Let's reformat this a bit to be what's expected
+				$theme = array(
+					'key'      => $theme_key,
+					'version'  => $installed_theme->get( 'Version' ),
+					'title'    => $installed_theme->get( 'Name' ),
+					'desc'     => $installed_theme->get( 'Description' ),
+					'icon'     => $installed_theme->get_screenshot(),
+				);
+
+				$themes[ $theme_key ] = $theme;
+
+			} // End if
+		} // End foreach
+
+		return $themes;
+
+	}
+
+
+	protected function get_platform() {
+
+		$platform = array(
+			'version' => get_bloginfo( 'version' ),
+		);
+
+		return $platform;
+
+	}
 
 }
